@@ -54,11 +54,16 @@ public class Main {
         }
 //        System.out.println("totalTraffic = " + statistics.getTotalTraffic() + "; statistics.minTime = " + statistics.minTime + "; statistics.maxTime = " + statistics.maxTime);
         System.out.println("Обьем часового трафика: " + new DecimalFormat("###,###,###,###").format(statistics.getTrafficRate()));
-
         // статистикaа всех существующих страниц сайта
         System.out.println("Существующие страницы сайта:");
         HashSet<String> set = (HashSet<String>) statistics.getSiteStat();
         for (String s : set) {
+            System.out.println(s);
+        }
+        // статистикaа всех несуществующих страниц сайта
+        System.out.println("Несуществующие страницы сайта:");
+        HashSet<String> set404 = (HashSet<String>) statistics.getSiteStat404();
+        for (String s : set404) {
             System.out.println(s);
         }
         // статистика операционных систем в виде Map
@@ -66,6 +71,13 @@ public class Main {
         HashMap<String, Double> map =  statistics.getOperSys();
         for(Map.Entry<String, Double> entry : map.entrySet()) {
             System.out.println(entry.getKey() + " = " + entry.getValue());
+        }
+        // статистика браузеров в виде Map
+        System.out.println("Статистика браузеров:");
+        DecimalFormat df = new DecimalFormat("0.00000");
+        HashMap<String, Double> mapb =  statistics.getOperBrowser();
+        for(Map.Entry<String, Double> entry : mapb.entrySet()) {
+            System.out.println(entry.getKey() + " = " + df.format(entry.getValue()));
         }
     }
  }

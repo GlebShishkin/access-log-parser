@@ -13,12 +13,18 @@ public class Statistics {
     private Set<String> hashsetSite404;
     private HashMap<String, Integer> hashmapOperSys;
     private HashMap<String, Integer> haыshmapBrowser;
+    private Set<String> hashsetIpAdr;   // набор IP адресов
+    private long countUserRequest;
+    private long countErrorRequest;
     public Statistics() {
         totalTraffic = 0;
         hashsetSite = new HashSet<>();
         hashsetSite404 = new HashSet<>();
         hashmapOperSys = new HashMap<>();
         haыshmapBrowser = new HashMap<>();
+        hashsetIpAdr    = new HashSet<>();
+        countUserRequest = 0;
+        countErrorRequest = 0;
     }
     public long getTotalTraffic() { return totalTraffic; }
     void addEntry(LogEntry logEntry) {
@@ -51,6 +57,14 @@ public class Statistics {
             else
                 haыshmapBrowser.put(logEntry.getUserAgent().getBrowser(), 1);
         }
+        // в расчёте должны участвовать только обращения к сайту через обычные браузеры (не боты).
+        if (logEntry.getUserAgent().isBot() == false) {
+            countUserRequest++; // количество посещений пользователем (не ботом)
+            hashsetIpAdr.add(logEntry.getIpAdr());  // уникальный IP-адрес пользователя
+        }
+        // ошибочный код ответа (4xx или 5xx)
+        if ((String.valueOf(logEntry.getResponseCode()).charAt(0) == '4') || (String.valueOf(logEntry.getResponseCode()).charAt(0) == '5'))
+            countErrorRequest++;    // передана строка с информацией о запросе с ошибочным кодом ответа
     }
     long getTrafficRate() {
         if (ChronoUnit.HOURS.between(minTime, maxTime) <= 0)
@@ -98,5 +112,23 @@ public class Statistics {
             map.put(entry.getKey(), (double)entry.getValue()/sumBrowser);
         }
         return map;
+    }
+    // Метод подсчёта среднего количества посещений сайта за час
+    public long getCountUserRequestInHour() {
+        if ((ChronoUnit.HOURS.between(minTime, maxTime)) == 0)
+            return 0;
+         return countUserRequest/ChronoUnit.HOURS.between(minTime, maxTime);
+    }
+    // Метод подсчёта среднего количества ошибочных запросов в час
+    public long getCountErrorRequestInHour() {
+        if ((ChronoUnit.HOURS.between(minTime, maxTime)) == 0)
+            return 0;
+        return countErrorRequest/ChronoUnit.HOURS.between(minTime, maxTime);
+    }
+    // Метод расчёта средней посещаемости одним пользователем
+    public long getAverageVisit() {
+        if (hashsetIpAdr.size() == 0)
+            return 0;
+         return countUserRequest/hashsetIpAdr.size();
     }
 }

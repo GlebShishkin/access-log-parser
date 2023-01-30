@@ -4,6 +4,7 @@ import java.util.regex.Pattern;
 public class UserAgent {
     final private String platform;
     final private String browser;
+    final private boolean bot;
     final private Pattern platformPattern = Pattern.compile("Windows[\s;]|Mac[\s;]|Linux[\s;]");
     // из описания: https://developer.mozilla.org/en-US/docs/Web/HTTP/Browser_detection_using_the_user_agent
     // Firefox, Seamonkey, Chrome, Chromium, Safari, Opera 15+, Opera 12-, Internet Explorer 10-, Internet Explorer 11
@@ -16,6 +17,7 @@ public class UserAgent {
         catch (Exception ex) {
             this.browser = "";
             this.platform = "";
+            this.bot = false;
             return;
         }
 
@@ -43,11 +45,18 @@ public class UserAgent {
             }
         };
         this.browser = tmpBrowser.replaceAll(";+$", "");
+        if (strUserAgent.toUpperCase().contains("BOT"))
+            this.bot = true;
+        else
+            this.bot = false;
     }
     public String getPlatform() {
         return platform;
     }
     public String getBrowser() {
         return browser;
+    }
+    public boolean isBot() {
+        return bot;
     }
 }

@@ -79,5 +79,11 @@ public class Main {
         for(Map.Entry<String, Double> entry : mapb.entrySet()) {
             System.out.println(entry.getKey() + " = " + df.format(entry.getValue()));
         }
+        // среднее количества посещений сайта за час
+        System.out.println("среднее количества посещений сайта за час: " + statistics.getCountUserRequestInHour());
+        // среднее количества ошибочных запросов в час
+        System.out.println("среднее количества ошибочных запросов в час: " + statistics.getCountErrorRequestInHour());
+        // среднее посещаемости одним пользователем
+        System.out.println("среднее посещаемости одним пользователем: " + statistics.getAverageVisit());
     }
  }

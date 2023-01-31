@@ -1,9 +1,8 @@
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class Statistics {
     private long totalTraffic;
@@ -16,6 +15,9 @@ public class Statistics {
     private Set<String> hashsetIpAdr;   // набор IP адресов
     private long countUserRequest;
     private long countErrorRequest;
+    private HashMap<LocalDateTime, Long> hashmapPickSec;
+    private HashSet<String> hashsetDomain;
+    private HashMap<String, Long> hashmapIpAdrCount;
     public Statistics() {
         totalTraffic = 0;
         hashsetSite = new HashSet<>();
@@ -23,6 +25,9 @@ public class Statistics {
         hashmapOperSys = new HashMap<>();
         haыshmapBrowser = new HashMap<>();
         hashsetIpAdr    = new HashSet<>();
+        hashmapPickSec   = new HashMap<>();
+        hashsetDomain   = new HashSet<>();
+        hashmapIpAdrCount = new HashMap<>();
         countUserRequest = 0;
         countErrorRequest = 0;
     }
@@ -61,10 +66,32 @@ public class Statistics {
         if (logEntry.getUserAgent().isBot() == false) {
             countUserRequest++; // количество посещений пользователем (не ботом)
             hashsetIpAdr.add(logEntry.getIpAdr());  // уникальный IP-адрес пользователя
+            if (logEntry.getTime() != null) {
+                // в качестве ключей должны быть отдельные секунды, а в качестве значений — количества посещений в эту секунду
+                if (hashmapPickSec.containsKey(logEntry.getTime()))
+                    hashmapPickSec.put(logEntry.getTime(), hashmapPickSec.get(logEntry.getTime()) + 1);
+                else
+                    hashmapPickSec.put(logEntry.getTime(), 1l);
+            }
+            // пользователем считается пользователь с одним и тем же IP-адресом, не являющийся ботом
+            if (hashmapIpAdrCount.containsKey(logEntry.getIpAdr()))
+                hashmapIpAdrCount.put(logEntry.getIpAdr(), hashmapIpAdrCount.get(logEntry.getIpAdr()) + 1);
+            else
+                hashmapIpAdrCount.put(logEntry.getIpAdr(), 1l);
         }
         // ошибочный код ответа (4xx или 5xx)
         if ((String.valueOf(logEntry.getResponseCode()).charAt(0) == '4') || (String.valueOf(logEntry.getResponseCode()).charAt(0) == '5'))
             countErrorRequest++;    // передана строка с информацией о запросе с ошибочным кодом ответа
+        // собирайте домены для всех referer-ов в HashSet<String>
+        if ((logEntry.getReferer() != "-") && (logEntry.getReferer() != null)) {
+            try {
+                String str = getDomainName(logEntry.getReferer());
+                if (str != null)
+                    hashsetDomain.add(str);
+            } catch (URISyntaxException e) {
+                throw new RuntimeException(e);
+            }
+        }
     }
     long getTrafficRate() {
         if (ChronoUnit.HOURS.between(minTime, maxTime) <= 0)
@@ -72,7 +99,6 @@ public class Statistics {
        // System.out.println("totalTraffic = " + totalTraffic + "; minTime = " + minTime + "; maxTime = " + maxTime + "; hours = " + ChronoUnit.HOURS.between(minTime, maxTime));
         return totalTraffic/ChronoUnit.HOURS.between(minTime, maxTime);
     }
-
     // статистика по сайтам
     public Set<String> getSiteStat() {
         HashSet<String> set = new HashSet<String>();
@@ -130,5 +156,33 @@ public class Statistics {
         if (hashsetIpAdr.size() == 0)
             return 0;
          return countUserRequest/hashsetIpAdr.size();
+    }
+    // Метод расчёта пиковой посещаемости сайта (в секунду)
+    public long getPickInSecond() {
+        Optional<Map.Entry<LocalDateTime, Long>> maxEntry = hashmapPickSec.entrySet().stream().max(Comparator.comparing(Map.Entry::getValue));
+        if (maxEntry.isEmpty())
+            return 0;
+        else
+            return maxEntry.get().getValue();
+    }
+    // получение доменного имени
+    private static String getDomainName(String url) throws URISyntaxException {
+        URI uri = new URI(url);
+        String domain = uri.getHost();
+        if (domain == null)
+            return null;
+        return domain.startsWith("www.") ? domain.substring(4) : domain;
+    }
+    // список сайтов, со страниц которых есть ссылки на текущий сайт
+    public Set<String> getSetDomainName() {
+        HashSet<String> set = new HashSet<String>();
+        hashsetDomain.forEach((String damainName) -> {
+            set.add(damainName);
+        });
+        return set;
+    }
+    // взять максимальное количество из всех пользователей
+    public long getMaxIpAdrCount() {
+        return hashmapIpAdrCount.entrySet().stream().max((entry1, entry2) -> entry1.getValue() > entry2.getValue() ? 1 : -1).get().getValue();
     }
 }

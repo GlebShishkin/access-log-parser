@@ -87,7 +87,7 @@ public class LogEntry {
     public int getResponseCode() { return responseCode; }
     public int getResponseSize() { return responseSize; }
     public UserAgent getUserAgent() { return userAgent; }
-
+    public String getReferer() { return referer; }
     @Override
     public String toString() {
         return "LogEntry{" +

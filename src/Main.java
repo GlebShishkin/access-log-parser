@@ -1,9 +1,8 @@
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.DecimalFormat;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 
 public class Main {
     public static void main(String[] args) {
@@ -85,5 +84,13 @@ public class Main {
         System.out.println("среднее количества ошибочных запросов в час: " + statistics.getCountErrorRequestInHour());
         // среднее посещаемости одним пользователем
         System.out.println("среднее посещаемости одним пользователем: " + statistics.getAverageVisit());
+        // расчёт пиковой посещаемости сайта (в секунду)
+        System.out.println("Пиковое значение " + statistics.getPickInSecond());
+        // список сайтов, со страниц которых есть ссылки на текущий сайт
+        Set<String> setDomain = statistics.getSetDomainName();
+        System.out.println("список сайтов, со страниц которых есть ссылки на текущий сайт:");
+        setDomain.forEach(System.out::println);
+        // взять максимальное количество посещений из всех пользователей
+        System.out.println("максимальное количество посещений из всех пользователей " + statistics.getMaxIpAdrCount());
     }
  }
